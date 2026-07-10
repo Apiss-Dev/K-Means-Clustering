@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Klasterisasi Pendidikan SMA Indonesia 2025/2026</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#ringkasan" class="nav-brand">
+      <span class="nav-brand-icon">🎓</span>
+      <span class="nav-brand-text">
+        <span class="nav-brand-title">SMA Insights</span>
+        <span class="nav-brand-sub">Klasterisasi Pendidikan</span>
+      </span>
+    </a>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="#ringkasan" class="nav-link active">Ringkasan</a></li>
+      <li><a href="#klaster" class="nav-link">Klaster</a></li>
+      <li><a href="#grafik" class="nav-link">Grafik</a></li>
+      <li><a href="#evaluasi" class="nav-link">Evaluasi</a></li>
+      <li><a href="#sebaran" class="nav-link">Sebaran</a></li>
+      <li><a href="#data" class="nav-link">Data Provinsi</a></li>
+      <li><a href="#bandingkan" class="nav-link">Bandingkan</a></li>
+      <li><a href="#rekomendasi" class="nav-link">Rekomendasi</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Ganti mode gelap/terang" onclick="toggleTheme()">🌙</button>
+      <button class="nav-toggle" id="navToggle" aria-label="Buka menu navigasi" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <h1>PENGELOMPOKAN PROVINSI BERDASARKAN KAPASITAS PENDIDIKAN SMA DI INDONESIA MENGGUNAKAN K-MEANS CLUSTERING</h1>
+  <div class="eyebrow-sub">Proyek Data Mining · Tugas Akhir</div>
+  <p>Sumber data: Kementerian Pendidikan Dasar dan Menengah RI / BPS · Klaster dihitung real-time di browser (K-Means asli, bukan data karangan)</p>
+</header>
+
+<main class="container">
+
+  <!-- K SELECTOR & METRIK -->
+  <section id="ringkasan">
+    <div class="k-selector">
+      <div class="k-bento">
+        <div class="k-bento-icon">🎛️</div>
+        <div class="k-bento-title">Pilih Klaster<br>yang Diinginkan</div>
+        <div class="k-bento-sub">Dihitung real-time dengan K-Means</div>
+      </div>
+      <div class="k-controls">
+        <span class="k-label">Jumlah Klaster (k)</span>
+        <div class="k-btns" id="kBtns"></div>
+      </div>
+    </div>
+
+    <div class="metrics-row" id="metricsRow"></div>
+  </section>
+
+  <!-- KLASTER SUMMARY -->
+  <section id="klaster">
+    <div class="section-title" id="clusterSummaryTitle">Ringkasan Klaster</div>
+    <div class="cluster-cards" id="clusterCards"></div>
+  </section>
+
+  <!-- BAR CHARTS -->
+  <section id="grafik">
+    <div class="charts-row" id="chartsRow"></div>
+  </section>
+
+  <!-- EVALUASI MODEL: ELBOW & SILHOUETTE PER-K -->
+  <section id="evaluasi">
+    <div class="section-title">Evaluasi Pemilihan Jumlah Klaster (k)</div>
+    <div class="eval-grid">
+      <div class="eval-card">
+        <h3>Elbow Method (SSE)</h3>
+        <div class="eval-desc">Semakin kecil SSE semakin rapat anggota tiap klaster. Titik yang lebih besar menandai k yang sedang dipilih — klik titik untuk berpindah k.</div>
+        <div id="evalElbow"></div>
+      </div>
+      <div class="eval-card">
+        <h3>Silhouette Score</h3>
+        <div class="eval-desc">Semakin tinggi (mendekati 1) semakin baik pemisahan antar klaster. Nilai ini jadi dasar mengapa k=3 dipilih sebagai default.</div>
+        <div id="evalSilhouette"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEBARAN: SCATTER PCA & PETA -->
+  <section id="sebaran">
+    <div class="section-title">Sebaran &amp; Peta Klaster</div>
+    <div class="viz-grid">
+      <div class="viz-card">
+        <h3>Scatter Plot (PCA 2D)</h3>
+        <div class="viz-desc">Proyeksi 3 fitur (sekolah, guru, murid) ke 2 dimensi utama. Provinsi yang posisinya berdekatan cenderung punya karakteristik pendidikan yang mirip. Klik titik untuk detail.</div>
+        <div id="scatterPlot"></div>
+        <div class="scatter-legend" id="scatterLegend"></div>
+      </div>
+      <div class="viz-card">
+        <h3>Peta Sebaran Provinsi</h3>
+        <div class="viz-desc">Ukuran titik merepresentasikan jumlah murid, warna menunjukkan klaster. Klik titik untuk detail provinsi.</div>
+        <div id="mapPlot"></div>
+        <div class="map-legend" id="mapLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABEL PROVINSI -->
+  <section id="data">
+    <div class="section-title-row">
+      <div class="section-title">Data Seluruh Provinsi</div>
+      <div class="toolbar-actions">
+        <button class="btn-export" onclick="exportCSV()">⬇ Unduh CSV</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search" oninput="searchTable(this.value)">
+      <div class="search-hint">Tips: ketik nama provinsi, atau nama klaster di kotak pencarian di atas untuk memfilter langsung.</div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('no')">No ↕</th>
+            <th onclick="sortTable('provinsi')">Provinsi ↕</th>
+            <th onclick="sortTable('klaster')">Klaster ↕</th>
+            <th onclick="sortTable('sekolah')">Sekolah ↕</th>
+            <th onclick="sortTable('guru')">Guru ↕</th>
+            <th onclick="sortTable('murid')">Murid ↕</th>
+            <th onclick="sortTable('silhouette')">Silhouette ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BANDINGKAN 2 PROVINSI -->
+  <section id="bandingkan">
+    <div class="section-title">Bandingkan 2 Provinsi</div>
+    <div class="compare-card">
+      <div class="compare-selectors">
+        <div class="compare-select-wrap">
+          <label for="compareA">Provinsi A</label>
+          <select class="compare-select" id="compareA" onchange="compareProvinces()"></select>
+        </div>
+        <div class="compare-vs-label">VS</div>
+        <div class="compare-select-wrap">
+          <label for="compareB">Provinsi B</label>
+          <select class="compare-select" id="compareB" onchange="compareProvinces()"></select>
+        </div>
+      </div>
+      <div id="compareResult"></div>
+    </div>
+  </section>
+
+  <!-- REKOMENDASI -->
+  <section id="rekomendasi">
+    <div class="section-title">Rekomendasi Kebijakan per Klaster</div>
+    <div class="reko-grid" id="rekoGrid"></div>
+  </section>
+
+</main>
+
+<footer>
+  Dashboard Klasterisasi Pendidikan SMA Indonesia 2025/2026 ·
+  Metode: <span id="footerMethod">K-Means Clustering (k=3)</span> ·
+  Dihitung: <span>real-time di browser (k-means++)</span> ·
+  Metodologi: <span>CRISP-DM</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Kembali ke atas">↑</button>
+
+<!-- MODAL DETAIL PROVINSI -->
+<div class="modal-overlay" id="detailModalOverlay">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="Detail provinsi">
+    <button class="modal-close" onclick="closeDetailModal()" aria-label="Tutup">×</button>
+    <div id="detailModalContent"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/kmeans.js"></script>
+<script src="js/pca.js"></script>
+<script src="js/geo-data.js"></script>
+<script src="js/charts-extra.js"></script>
+<script src="js/interactions.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
